@@ -10,18 +10,16 @@ using System.Linq;
 
 namespace GameSaveSourceControl.Managers
 {
-    //TODO Warn Can only currently pull/push from a branch named master
-    public class SharedRepoManager
+    //TODO Can only currently pull/push from a branch named master
+    public class SharedRepoManager : ISharedRepoManager
     {
-        public SharedRepoManager()
-        {
-
-        }
+        private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
         public string CloneRepo(string repoFolderPath)
         {
             try
             {
+                _logger.Info("Making attempt to clone repo");
                 var co = new CloneOptions();
                 co.CredentialsProvider = (_url, _user, _cred) => new UsernamePasswordCredentials { Username = ConfigurationManager.AppSettings["GitEmail"], Password = ConfigurationManager.AppSettings["GitPassword"] };
                 Repository.Clone(ConfigurationManager.AppSettings["GitRemoteUrl"], repoFolderPath, co);
@@ -31,15 +29,17 @@ namespace GameSaveSourceControl.Managers
             {
                 if (e.Message.Contains("exists"))
                 {
-                    Console.WriteLine("log :: check seems to indicate we have already cloned the repo");
+                    _logger.Error(e, "check seems to indicate we have already cloned the repo");
                     return repoFolderPath;
                 }
+                _logger.Error(e, "failed to clone repo");
                 throw;
             }
         }
 
         public string PullWithStatus(string repoFolderPath)
         {
+            _logger.Info("Making attempt to pull from repo");
             using (var repo = new Repository(repoFolderPath))
             {
                 // Credential information to fetch
@@ -55,13 +55,13 @@ namespace GameSaveSourceControl.Managers
 
                 Signature author = new Signature(ConfigurationManager.AppSettings["GitUser"], ConfigurationManager.AppSettings["GitEmail"], DateTime.Now);
 
-                // Pull
                 return Commands.Pull(repo, author, options).Status.ToString();
             }
         }
 
         public string PushWithStatus(List<LocalMapping> fileMappings, string repoFolderPath)
         {
+            _logger.Info("Making attempt to push to repo");
             try
             {
                 SyncFilesToRepo(fileMappings, repoFolderPath);
@@ -102,7 +102,7 @@ namespace GameSaveSourceControl.Managers
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error has occurred. {e.Message}");
+                _logger.Error(e,"failed to push changes");
                 return "failed to push changes";
             }
         }
@@ -112,12 +112,12 @@ namespace GameSaveSourceControl.Managers
             var sharedSubFolder = $"{ sharedLocation }\\{ Constants.BaseFolderName}\\{saveName}\\{localFilePath.Split('\\').Last()}";
             try
             {
+                _logger.Info("Making attempt to transfer to shared");
                 TransforFilesfromSourceToTarget(localFilePath, sharedSubFolder);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"The game data for {saveName} failed to be pulled");
-                Console.WriteLine($"log :: {e.Message}");
+                _logger.Error(e,$"The game data for {saveName} failed to be transferred to shared");
             }
         }
 
@@ -126,12 +126,12 @@ namespace GameSaveSourceControl.Managers
             var sharedSubFolder = $"{ sharedLocation }\\{ Constants.BaseFolderName}\\{saveName}\\{localFilePath.Split('\\').Last()}";
             try
             {
+                _logger.Info("Making attempt to transfer to Local");
                 TransforFilesfromSourceToTarget(sharedSubFolder, localFilePath);
             }
             catch (Exception e)
             {
-                Console.WriteLine($"The game date for {saveName} failed to be pulled");
-                Console.WriteLine($"log :: {e.Message}");
+                _logger.Error(e, $"The game data for {saveName} failed to be transferred to Local");
             }
         }
 
@@ -164,7 +164,6 @@ namespace GameSaveSourceControl.Managers
 
             try
             {
-                // get the file attributes for file or directory
                 FileAttributes attr = File.GetAttributes(source.FullName);
 
                 bool isFolder = attr.HasFlag(FileAttributes.Directory);

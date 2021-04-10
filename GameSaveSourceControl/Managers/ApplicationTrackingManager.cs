@@ -1,5 +1,5 @@
 ﻿using GameSaveSourceControl.Model;
-using System;
+using GameSaveSourceControl.UI;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,49 +7,63 @@ using System.Management;
 
 namespace GameSaveSourceControl.Managers
 {
-    public class ApplicationTrackingManager
+    public class ApplicationTrackingManager : IApplicationTrackingManager
     {
-        List<AppTrackingProfile> currentTrackingProfiles = new List<AppTrackingProfile>();
+        private static readonly NLog.Logger _logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public bool ReadApplicationsRunning(List<LocalMapping> games)
+        private readonly IMessages _messages;
+
+        List<AppTrackingProfile> _currentTrackingProfiles = new List<AppTrackingProfile>();
+
+        public ApplicationTrackingManager(IMessages messages)
         {
-            GetCurrentTrackingProfiles(games);
-            if (currentTrackingProfiles != null)
-                if (currentTrackingProfiles.Any())
+            _messages = messages;
+        }
+
+        public bool SetTrackingOnApplications(List<LocalMapping> applicationMappings, out List<LocalMapping> trackedApps)
+        {
+            _logger.Info("About to search for apps to track");
+            GetCurrentTrackingProfiles(applicationMappings);
+            if (_currentTrackingProfiles != null)
+                if (_currentTrackingProfiles.Any())
                 {
-                    Console.WriteLine("\n Application being watched to close");
-                    foreach (var item in currentTrackingProfiles)
-                        Console.WriteLine($"{item.LinkedMapping.FileName}");
-                    Console.WriteLine("Saves will sync when all applications exit");
+                    var savesTracked = _currentTrackingProfiles.Select(i => i.LinkedMapping.FileName).ToList();
+                    _messages.SavesToTrackMessage(savesTracked);
 
                     RunProfileTrackingLoop();
-                    Console.WriteLine("Tracked application exited sync will begin soon");
+                    _messages.FinishedTrackingMessage();
+
+                    trackedApps = _currentTrackingProfiles.Select(i => i.LinkedMapping).ToList(); 
                     return true;
                 }
 
-            Console.WriteLine("There are no current applications that can be tracked in you shared saves");
+            _logger.Info("No trackable apps found");
+            _messages.NoTrackableApplications();
+            trackedApps = null;
             return false;
         }
 
         void RunProfileTrackingLoop()
         {
             bool stopTracking = false;
-
+            _logger.Info("Track on apps");
             while (!stopTracking)
             {
-                foreach (var item in currentTrackingProfiles)
+                foreach (var item in _currentTrackingProfiles)
                     if (item.ProcessesIdsNamed.All(i => i.Value.HasExited))
                         item.ApplicationClosed = true;
 
-                currentTrackingProfiles.RemoveAll(i => i.ApplicationClosed);
+                _currentTrackingProfiles.RemoveAll(i => i.ApplicationClosed);
 
-                if (!currentTrackingProfiles.Any())
+                if (!_currentTrackingProfiles.Any())
                     stopTracking = true;
             }
+            _logger.Info("Track on apps complete");
         }
 
         void GetCurrentTrackingProfiles(List<LocalMapping> games)
         {
+            _logger.Info("Preparing to query all running system applications, hold on tight!!!");
             var wmiQueryString = "SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process";
             using (var searcher = new ManagementObjectSearcher(wmiQueryString))
             using (var results = searcher.Get())
@@ -70,7 +84,7 @@ namespace GameSaveSourceControl.Managers
                             if (game.GameExePath.ToLower() == process.Path.ToLower())
                             {
                                 bool alreadyTracked = false;
-                                foreach (var trackProfile in currentTrackingProfiles)
+                                foreach (var trackProfile in _currentTrackingProfiles)
                                     if (trackProfile.LinkedMapping.FileName == game.FileName)
                                     {
                                         trackProfile.ProcessesIdsNamed.Add(process.Process.Id, process.Process);
@@ -85,10 +99,11 @@ namespace GameSaveSourceControl.Managers
                                         ProcessesIdsNamed = new Dictionary<int, Process>()
                                     };
                                     newProfile.ProcessesIdsNamed.Add(process.Process.Id, process.Process);
-                                    currentTrackingProfiles.Add(newProfile);
+                                    _currentTrackingProfiles.Add(newProfile);
                                 }
                             }
             }
+            _logger.Info($"We have queried all the applications finding {_currentTrackingProfiles.Count} results");
         }
 
     }

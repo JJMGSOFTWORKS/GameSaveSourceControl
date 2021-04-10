@@ -10,14 +10,10 @@ The app manages multiple files pulling them all to a local repo and notifies if 
 
 ### Upcoming Changes 
 
-- Use IOC and move code out of Program.cs 
-
-- Introduce logging to remove any unneeded extra information from UI 
-
-- Introduce UI system to manage user interaction and feedback separate from business logic 
-
 - Allow More branch name choice other than master 
 
 - Allow Save Folders to be tracked (without conflict between players) 
+
+- Make app more identifiable with an icon and name in open windows
 
 - Update the README to be more useful for anyone looking at the repo 

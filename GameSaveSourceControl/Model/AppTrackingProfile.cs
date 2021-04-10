@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace GameSaveSourceControl.Model
 {
-    class AppTrackingProfile
+    public class AppTrackingProfile
     {
         public LocalMapping LinkedMapping { get; set; }
         //some tasks can run many processes, we watch for all to close
