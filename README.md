@@ -16,4 +16,6 @@ The app manages multiple files pulling them all to a local repo and notifies if 
 
 - Make app more identifiable with an icon and name in open windows
 
+- Add assistance to players when new saves are available i.e make it clear the mapping is correct
+
 - Update the README to be more useful for anyone looking at the repo 

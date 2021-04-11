@@ -103,6 +103,8 @@ namespace GameSaveSourceControl
                 default:
                     break;
             };
+
+            MenuLoop();
         }
 
         private void AddGameMenu()
@@ -133,10 +135,10 @@ namespace GameSaveSourceControl
 
         bool ValidSaveName(string nameToValidate)
         {
-            if (!ValidGameGitRepoMapping())
+            if (!ValidGameGitRepoMapping() || string.IsNullOrEmpty(nameToValidate))
             {
                 _messages.InvalidAddWarning();
-                return true;
+                return false;
             }
 
             return !_currentLocalMappingProfile.LocalMappings.Any(i => i.FileName == nameToValidate);

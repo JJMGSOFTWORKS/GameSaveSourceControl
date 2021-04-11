@@ -13,12 +13,12 @@ namespace GameSaveSourceControl
 
         public static void BuildDependancies()
         {
-            _logger.Log(NLog.LogLevel.Info, "Preparing to build service provider for dependancies");
+            _logger.Log(NLog.LogLevel.Info, "Preparing to build service provider for dependencies");
             var serviceCollection = new ServiceCollection();
 
             serviceCollection.AddScoped<IGameSaveSourceControl, GameSaveSourceControl>();
             serviceCollection.AddTransient<IApplicationTrackingManager, ApplicationTrackingManager>();
-            serviceCollection.AddTransient<IFolderPathManager, FolderPathManager>();
+            serviceCollection.AddScoped<IFolderPathManager, FolderPathManager>();
             serviceCollection.AddTransient<IMappingManager, MappingManager>();
             serviceCollection.AddTransient<ISharedRepoManager, SharedRepoManager>();
             serviceCollection.AddTransient<IMenus, Menus>();
