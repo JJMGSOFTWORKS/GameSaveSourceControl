@@ -8,6 +8,6 @@ namespace GameSaveSourceControl.Managers
         List<string> CompareLocalToSharedMappings(LocalMappingProfile localMapping, List<string> sharedMapping);
         LocalMappingProfile ReadLocalMappingProfile();
         List<string> ReadSharedMappings();
-        void WriteLocalMappingData(List<LocalMapping> fileMappings);
+        void WriteLocalMappingData(List<LocalMapping> fileMappings, List<string> sharedMappings);
     }
 }

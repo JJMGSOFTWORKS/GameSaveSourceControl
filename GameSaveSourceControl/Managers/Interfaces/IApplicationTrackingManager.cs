@@ -5,6 +5,6 @@ namespace GameSaveSourceControl.Managers
 {
     public interface IApplicationTrackingManager
     {
-        bool SetTrackingOnApplications(List<LocalMapping> applicationMappings, out List<LocalMapping> trackedApps);
+        bool SetTrackingOnApplications(List<LocalMapping> applicationMappings, out List<string> trackedApps);
     }
 }

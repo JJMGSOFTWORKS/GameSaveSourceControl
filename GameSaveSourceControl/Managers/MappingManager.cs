@@ -34,10 +34,10 @@ namespace GameSaveSourceControl.Managers
             return JsonConvert.DeserializeObject<List<string>>(jsonData);
         }
 
-        public void WriteLocalMappingData(List<LocalMapping> fileMappings)
+        public void WriteLocalMappingData(List<LocalMapping> fileMappings, List<string> sharedMappings)
         {
             WriteLocalMappingProfile(new LocalMappingProfile { LocalMappings = fileMappings });
-            WriteSharedMappings(fileMappings.Select(m => m.FileName).ToList());
+            WriteSharedMappings(sharedMappings);
         }
 
         public List<string> CompareLocalToSharedMappings(LocalMappingProfile localMapping, List<string> sharedMapping)

@@ -36,7 +36,7 @@ namespace GameSaveSourceControl.UI
 
             string file;
             Console.WriteLine($"\nGreat in what file can we find the {mapping.FileName} save");
-            file = RunFileDialog();
+            file = RunFileDialog("Select Save File");
 
             if (string.IsNullOrEmpty(file))
             {
@@ -48,7 +48,7 @@ namespace GameSaveSourceControl.UI
             Console.WriteLine("Okay!");
 
             Console.WriteLine($"\nWhere is the {mapping.FileName} application .exe located?");
-            var exe = RunFileDialog();
+            var exe = RunFileDialog("Select Game Executable");
 
             if (string.IsNullOrEmpty(exe))
             {
@@ -82,20 +82,41 @@ namespace GameSaveSourceControl.UI
             return false;
         }
 
-        private static string RunFolderdialog()
+        //TODO refactor repeated code in following methods
+        private static string RunFolderDialog(string dialogHeader)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
-                return dialog.SelectedPath;
+            dialog.Description = dialogHeader;
+            dialog.UseDescriptionForTitle = true;
+            bool resultFound = false;
+
+            while (!resultFound)
+            {
+                var dialogResult = dialog.ShowDialog();
+                if (dialogResult == DialogResult.OK)
+                    return dialog.SelectedPath;
+                if (dialogResult == DialogResult.Cancel)
+                    resultFound = true;
+            }
 
             return string.Empty;
         }
 
-        private static string RunFileDialog()
+        private static string RunFileDialog(string dialogHeader)
         {
             OpenFileDialog dialog = new OpenFileDialog();
-            if (dialog.ShowDialog() == DialogResult.OK)
-                return dialog.FileName;
+            dialog.Multiselect = false;
+            dialog.Title = dialogHeader;
+            bool resultFound = false;
+
+            while (!resultFound)
+            {
+                var dialogResult = dialog.ShowDialog();
+                if (dialogResult == DialogResult.OK)
+                    return dialog.FileName;
+                if (dialogResult == DialogResult.Cancel)
+                    resultFound = true;
+            }
 
             return string.Empty;
         }

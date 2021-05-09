@@ -94,7 +94,10 @@ namespace GameSaveSourceControl
                         break;
                     }
                     if (_applicationTrackingManager.SetTrackingOnApplications(_currentLocalMappingProfile.LocalMappings, out var appsTracked))
-                        _sharedRepoManager.PushWithStatus(appsTracked, _folderPathManager.LocalRepoPath);
+                    {
+                        List<LocalMapping> changedMappings = _currentLocalMappingProfile.LocalMappings.Where(i => appsTracked.Contains(i.FileName)).ToList();
+                        _sharedRepoManager.PushWithStatus(changedMappings, _folderPathManager.LocalRepoPath);
+                    }
                     break;
 
                 case ConsoleKey.Escape:
@@ -129,13 +132,13 @@ namespace GameSaveSourceControl
                 _currentLocalMappingProfile.LocalMappings = new List<LocalMapping>();
 
             _currentLocalMappingProfile.LocalMappings.Add(mapping);
-            _mappingManager.WriteLocalMappingData(_currentLocalMappingProfile.LocalMappings);
+            _mappingManager.WriteLocalMappingData(_currentLocalMappingProfile.LocalMappings,_currentSharedMappings);
             _messages.ItemAddMessage(true);
         }
 
         bool ValidSaveName(string nameToValidate)
         {
-            if (!ValidGameGitRepoMapping() || string.IsNullOrEmpty(nameToValidate))
+            if (string.IsNullOrEmpty(nameToValidate))
             {
                 _messages.InvalidAddWarning();
                 return false;

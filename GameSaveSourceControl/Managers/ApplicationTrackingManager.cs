@@ -20,7 +20,7 @@ namespace GameSaveSourceControl.Managers
             _messages = messages;
         }
 
-        public bool SetTrackingOnApplications(List<LocalMapping> applicationMappings, out List<LocalMapping> trackedApps)
+        public bool SetTrackingOnApplications(List<LocalMapping> applicationMappings, out List<string> trackedApps)
         {
             _logger.Info("About to search for apps to track");
             GetCurrentTrackingProfiles(applicationMappings);
@@ -33,7 +33,7 @@ namespace GameSaveSourceControl.Managers
                     RunProfileTrackingLoop();
                     _messages.FinishedTrackingMessage();
 
-                    trackedApps = _currentTrackingProfiles.Select(i => i.LinkedMapping).ToList(); 
+                    trackedApps = savesTracked; 
                     return true;
                 }
 
